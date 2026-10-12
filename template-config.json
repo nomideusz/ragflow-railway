@@ -154,11 +154,6 @@
           "description": "Single-node cluster",
           "isOptional": false
         },
-        "network.host": {
-          "defaultValue": "::",
-          "description": "Listen on IPv6 and IPv4 so Railway's private network can reach it",
-          "isOptional": false
-        },
         "xpack.security.enabled": {
           "defaultValue": "true",
           "description": "Require the elastic password",

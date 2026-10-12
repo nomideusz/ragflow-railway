@@ -45,7 +45,9 @@ Every password, plus RAGFlow's session signing key and the built-in superuser's 
 
 **Add a model provider before uploading.** RAGFlow ships without embedded models: in the UI open your avatar, then *Model providers*, add a provider with your API key and pick default chat and embedding models. Knowledge bases use the embedding model to index documents, so parsing waits for this step.
 
-**Resources.** RAGFlow is heavy, and it loads OCR and layout models for deep document parsing. In testing the stack idled at about 3 GB of RAM (RAGFlow about 1.6 GB, Elasticsearch about 1.2 GB, MySQL, MinIO and Redis about 300 MB together) and parsing a document briefly adds more, so it needs the Hobby or Pro plan, not Trial. The first deploy also pulls a ~13 GB image and can take several minutes. For big knowledge bases raise `ES_JAVA_OPTS` (for example `-Xms2g -Xmx2g`) on Elasticsearch.
+**Resources.** RAGFlow is heavy: it runs four Python processes and loads OCR and layout models for deep document parsing. In testing the stack idled at about 6 GB of RAM (RAGFlow about 3.9 GB, Elasticsearch about 1.6 GB, MySQL, MinIO and Redis about 400 MB together), and the parsing worker grows by another 1.5 GB or so once it has handled a PDF. It needs the Hobby or Pro plan, not Trial. The first deploy pulls a ~13 GB image and can take several minutes. For big knowledge bases raise `ES_JAVA_OPTS` (for example `-Xms2g -Xmx2g`) on Elasticsearch.
+
+**Trimming RAM.** The RAGFlow start command is upstream's: `/ragflow/entrypoint.sh --enable-adminserver --init-model-provider-tables`. Removing `--enable-adminserver` saves about 1 GB (you lose the `/admin` panel and the built-in superuser), and adding `--disable-datasync` saves about 0.8 GB (you lose scheduled syncing from external sources such as Confluence, Notion or Google Drive; uploading files still works).
 
 **Uploads and backups.** Original files live in MinIO, parsed chunks and vectors in Elasticsearch, everything else in MySQL. Back up all three volumes together.
 
