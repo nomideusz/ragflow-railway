@@ -5,7 +5,7 @@
       "name": "RAGFlow",
       "build": {},
       "deploy": {
-        "startCommand": "/ragflow/entrypoint.sh --enable-adminserver --init-model-provider-tables",
+        "startCommand": "/bin/bash -c \"a=--init-model-provider-tables; [ x$ENABLE_ADMIN_SERVER = xtrue ] && a=$a' --enable-adminserver'; [ x$ENABLE_DATA_SYNC = xtrue ] || a=$a' --disable-datasync'; exec /ragflow/entrypoint.sh $a\"",
         "healthcheckPath": "/api/v1/system/healthz",
         "restartPolicyType": "ON_FAILURE",
         "restartPolicyMaxRetries": 10
@@ -32,17 +32,27 @@
         },
         "ADMIN_DEFAULT_PASSWORD": {
           "defaultValue": "${{secret(24, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
-          "description": "Password of the built-in superuser (DEFAULT_SUPERUSER_EMAIL), created on first boot. Log in with it at /admin; changing this later does not change an existing account",
+          "description": "Password of the built-in superuser (DEFAULT_SUPERUSER_EMAIL), created when the admin server first starts (ENABLE_ADMIN_SERVER=true). Changing this later does not change an existing account",
           "isOptional": false
         },
         "DEFAULT_SUPERUSER_EMAIL": {
           "defaultValue": "admin@ragflow.io",
-          "description": "Email of the built-in superuser created on first boot",
+          "description": "Email of the built-in superuser created when the admin server first starts",
           "isOptional": false
         },
         "REGISTER_ENABLED": {
           "defaultValue": "1",
           "description": "1 = anyone who reaches the URL can sign up (each user gets their own workspace). Set to 0 after creating your accounts",
+          "isOptional": false
+        },
+        "ENABLE_ADMIN_SERVER": {
+          "defaultValue": "false",
+          "description": "true = also run the admin server: the /admin panel and the built-in superuser below (about +1 GB RAM)",
+          "isOptional": false
+        },
+        "ENABLE_DATA_SYNC": {
+          "defaultValue": "false",
+          "description": "true = run the data-source sync worker for connectors like Confluence, Notion, Google Drive or S3 (about +0.8 GB RAM). File uploads work without it",
           "isOptional": false
         },
         "DOC_ENGINE": {

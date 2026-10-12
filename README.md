@@ -8,7 +8,7 @@
 
 The stack is five services, the same shape as upstream's Docker Compose setup:
 
-- **RAGFlow** (`infiniflow/ragflow:v0.27.2`, pinned): one container runs the web UI behind its built-in nginx, the API server, the admin server, the document parsing task executor and the data-source sync worker. It is the only public service. Its health check (`/api/v1/system/healthz`) only passes once MySQL, Redis, Elasticsearch and MinIO all answer.
+- **RAGFlow** (`infiniflow/ragflow:v0.27.2`, pinned): one container runs the web UI behind its built-in nginx, the API server and the document parsing task executor. The admin server and the data-source sync worker are optional (see below), which keeps the default stack lean. It is the only public service. Its health check (`/api/v1/system/healthz`) only passes once MySQL, Redis, Elasticsearch and MinIO all answer.
 - **Elasticsearch 8.11** (upstream's tested version): the full-text and vector index. Single-node, password-protected, 1 GB JVM heap, data on a volume. Disk watermarks are off so a small Railway volume does not flip the index to read-only.
 - **MySQL 8.0**: users, knowledge bases, documents and settings.
 - **MinIO** (the `pgsty/silo` build upstream uses): stores the original uploaded files on a volume.
@@ -41,13 +41,13 @@ Every password, plus RAGFlow's session signing key and the built-in superuser's 
 
 **First login.** Open the RAGFlow service's Railway domain once the deploy is green and sign up. Each account gets its own workspace. Sign-up is open to anyone who reaches the URL (`REGISTER_ENABLED=1`, upstream's default): once your accounts exist, set `REGISTER_ENABLED=0` on the RAGFlow service.
 
-**Built-in superuser.** On first boot RAGFlow creates a superuser `admin@ragflow.io` (`DEFAULT_SUPERUSER_EMAIL`) with the generated `ADMIN_DEFAULT_PASSWORD` shown in the RAGFlow service's variables. Use it at `/admin` to manage users and system settings. Change the password after the first login; editing the variable later does not change an existing account.
+**Optional: admin panel and superuser (`ENABLE_ADMIN_SERVER=true`).** Off by default to save about 1 GB of RAM. Without it there is no `/admin` panel (user management, system settings, roles and whitelist) and no superuser account; regular users sign up and use RAGFlow normally. Set `ENABLE_ADMIN_SERVER=true` on the RAGFlow service and it redeploys with the admin server, which on its first start creates the superuser `admin@ragflow.io` (`DEFAULT_SUPERUSER_EMAIL`) with the generated `ADMIN_DEFAULT_PASSWORD` shown in the service's variables. Log in at `/admin` and change the password; editing the variable later does not change an existing account.
+
+**Optional: data-source sync (`ENABLE_DATA_SYNC=true`).** Off by default to save about 0.8 GB of RAM. It runs the worker that pulls documents on a schedule from connectors such as Confluence, Notion, Google Drive or S3. Uploading files works without it.
 
 **Add a model provider before uploading.** RAGFlow ships without embedded models: in the UI open your avatar, then *Model providers*, add a provider with your API key and pick default chat and embedding models. Knowledge bases use the embedding model to index documents, so parsing waits for this step.
 
-**Resources.** RAGFlow is heavy: it runs four Python processes and loads OCR and layout models for deep document parsing. In testing the stack idled at about 6 GB of RAM (RAGFlow about 3.9 GB, Elasticsearch about 1.6 GB, MySQL, MinIO and Redis about 400 MB together), and the parsing worker grows by another 1.5 GB or so once it has handled a PDF. It needs the Hobby or Pro plan, not Trial. The first deploy pulls a ~13 GB image and can take several minutes. For big knowledge bases raise `ES_JAVA_OPTS` (for example `-Xms2g -Xmx2g`) on Elasticsearch.
-
-**Trimming RAM.** The RAGFlow start command is upstream's: `/ragflow/entrypoint.sh --enable-adminserver --init-model-provider-tables`. Removing `--enable-adminserver` saves about 1 GB (you lose the `/admin` panel and the built-in superuser), and adding `--disable-datasync` saves about 0.8 GB (you lose scheduled syncing from external sources such as Confluence, Notion or Google Drive; uploading files still works).
+**Resources.** RAGFlow loads OCR and layout models for deep document parsing, so it is not small. With the default (lean) settings the stack idled at about 4.8 GB of RAM in testing: RAGFlow about 2.6 GB, Elasticsearch about 1.7 GB, MySQL, MinIO and Redis about 400 MB together. The parsing worker grows by another 1.5 GB or so once it has handled PDFs, and each optional feature above adds its share. It needs the Hobby or Pro plan, not Trial. The first deploy pulls a ~13 GB image and can take several minutes. For big knowledge bases raise `ES_JAVA_OPTS` (for example `-Xms2g -Xmx2g`) on Elasticsearch.
 
 **Uploads and backups.** Original files live in MinIO, parsed chunks and vectors in Elasticsearch, everything else in MySQL. Back up all three volumes together.
 
