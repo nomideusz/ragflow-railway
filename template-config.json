@@ -1,0 +1,307 @@
+{
+  "services": {
+    "7453e10c-ab22-4e25-b694-2e2b0411be6e": {
+      "icon": "https://raw.githubusercontent.com/nomideusz/ragflow-railway/main/icon.svg",
+      "name": "RAGFlow",
+      "build": {},
+      "deploy": {
+        "startCommand": "/ragflow/entrypoint.sh --enable-adminserver --init-model-provider-tables",
+        "healthcheckPath": "/api/v1/system/healthz",
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      },
+      "source": {
+        "image": "infiniflow/ragflow:v0.27.2"
+      },
+      "networking": {
+        "serviceDomains": {
+          "<hasDomain>": {}
+        }
+      },
+      "volumeMounts": {},
+      "variables": {
+        "PORT": {
+          "defaultValue": "80",
+          "description": "Port of RAGFlow's built-in nginx (web UI + API) - leave as is",
+          "isOptional": false
+        },
+        "RAGFLOW_SECRET_KEY": {
+          "defaultValue": "${{secret(64, \"0123456789abcdef\")}}",
+          "description": "Signs login sessions and API tokens. Changing it logs everyone out",
+          "isOptional": false
+        },
+        "ADMIN_DEFAULT_PASSWORD": {
+          "defaultValue": "${{secret(24, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Password of the built-in superuser (DEFAULT_SUPERUSER_EMAIL), created on first boot. Log in with it at /admin; changing this later does not change an existing account",
+          "isOptional": false
+        },
+        "DEFAULT_SUPERUSER_EMAIL": {
+          "defaultValue": "admin@ragflow.io",
+          "description": "Email of the built-in superuser created on first boot",
+          "isOptional": false
+        },
+        "REGISTER_ENABLED": {
+          "defaultValue": "1",
+          "description": "1 = anyone who reaches the URL can sign up (each user gets their own workspace). Set to 0 after creating your accounts",
+          "isOptional": false
+        },
+        "DOC_ENGINE": {
+          "defaultValue": "elasticsearch",
+          "description": "Full-text + vector index backend",
+          "isOptional": false
+        },
+        "ES_HOST": {
+          "defaultValue": "${{Elasticsearch.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Elasticsearch on the private network",
+          "isOptional": false
+        },
+        "ELASTIC_PASSWORD": {
+          "defaultValue": "${{Elasticsearch.ELASTIC_PASSWORD}}",
+          "description": "Elasticsearch password",
+          "isOptional": false
+        },
+        "MYSQL_HOST": {
+          "defaultValue": "${{MySQL.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "MySQL on the private network",
+          "isOptional": false
+        },
+        "MYSQL_DBNAME": {
+          "defaultValue": "${{MySQL.MYSQL_DATABASE}}",
+          "description": "MySQL database",
+          "isOptional": false
+        },
+        "MYSQL_PASSWORD": {
+          "defaultValue": "${{MySQL.MYSQL_ROOT_PASSWORD}}",
+          "description": "MySQL root password",
+          "isOptional": false
+        },
+        "MINIO_HOST": {
+          "defaultValue": "${{MinIO.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "MinIO (uploaded files) on the private network, port 9000",
+          "isOptional": false
+        },
+        "MINIO_USER": {
+          "defaultValue": "${{MinIO.MINIO_ROOT_USER}}",
+          "description": "MinIO access key",
+          "isOptional": false
+        },
+        "MINIO_PASSWORD": {
+          "defaultValue": "${{MinIO.MINIO_ROOT_PASSWORD}}",
+          "description": "MinIO secret key",
+          "isOptional": false
+        },
+        "REDIS_HOST": {
+          "defaultValue": "${{Redis.RAILWAY_PRIVATE_DOMAIN}}",
+          "description": "Redis (task queue + cache) on the private network",
+          "isOptional": false
+        },
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{Redis.REDIS_PASSWORD}}",
+          "description": "Redis password",
+          "isOptional": false
+        },
+        "API_PROXY_SCHEME": {
+          "defaultValue": "python",
+          "description": "Serve the API with the Python server (upstream default)",
+          "isOptional": false
+        },
+        "TZ": {
+          "defaultValue": "UTC",
+          "description": "Server time zone",
+          "isOptional": false
+        },
+        "RAILWAY_HEALTHCHECK_TIMEOUT_SEC": {
+          "defaultValue": "900",
+          "description": "The image is ~13 GB and first boot creates the database schema, so allow a slow first start",
+          "isOptional": false
+        }
+      }
+    },
+    "1e97deb0-b436-4f8a-8deb-c89b84293928": {
+      "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/elasticsearch.svg",
+      "name": "Elasticsearch",
+      "build": {},
+      "deploy": {
+        "startCommand": "/bin/bash -c \"chown -R 1000:0 /usr/share/elasticsearch/data && exec env HOME=/usr/share/elasticsearch setpriv --reuid=1000 --regid=0 --clear-groups /usr/local/bin/docker-entrypoint.sh eswrapper\"",
+        "healthcheckPath": null,
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      },
+      "source": {
+        "image": "elasticsearch:8.11.3"
+      },
+      "networking": {
+        "serviceDomains": {}
+      },
+      "volumeMounts": {
+        "f496a597-1656-4fbe-94d8-94cdfdb58411": {
+          "mountPath": "/usr/share/elasticsearch/data"
+        }
+      },
+      "variables": {
+        "ELASTIC_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Auto-generated password of the elastic user (only applied on first boot)",
+          "isOptional": false
+        },
+        "ES_JAVA_OPTS": {
+          "defaultValue": "-Xms1g -Xmx1g",
+          "description": "JVM heap. 1 GB suits small and medium knowledge bases; raise it (and the service RAM) for large ones",
+          "isOptional": false
+        },
+        "discovery.type": {
+          "defaultValue": "single-node",
+          "description": "Single-node cluster",
+          "isOptional": false
+        },
+        "network.host": {
+          "defaultValue": "::",
+          "description": "Listen on IPv6 and IPv4 so Railway's private network can reach it",
+          "isOptional": false
+        },
+        "xpack.security.enabled": {
+          "defaultValue": "true",
+          "description": "Require the elastic password",
+          "isOptional": false
+        },
+        "xpack.security.http.ssl.enabled": {
+          "defaultValue": "false",
+          "description": "Plain HTTP inside the private network",
+          "isOptional": false
+        },
+        "xpack.security.transport.ssl.enabled": {
+          "defaultValue": "false",
+          "description": "Single node, no transport TLS needed",
+          "isOptional": false
+        },
+        "xpack.ml.enabled": {
+          "defaultValue": "false",
+          "description": "Machine-learning node features are not used by RAGFlow; off saves memory",
+          "isOptional": false
+        },
+        "ingest.geoip.downloader.enabled": {
+          "defaultValue": "false",
+          "description": "GeoIP database downloads are not needed",
+          "isOptional": false
+        },
+        "cluster.routing.allocation.disk.threshold_enabled": {
+          "defaultValue": "false",
+          "description": "Disk watermarks would make the index read-only on small Railway volumes",
+          "isOptional": false
+        },
+        "bootstrap.memory_lock": {
+          "defaultValue": "false",
+          "description": "Memory locking is not available on Railway",
+          "isOptional": false
+        },
+        "RAILWAY_RUN_UID": {
+          "defaultValue": "0",
+          "description": "Start as root to fix volume ownership, then Elasticsearch drops to its own user",
+          "isOptional": false
+        }
+      }
+    },
+    "a197ee86-0e6a-4fbe-ae6f-da194ec8fb3b": {
+      "icon": "https://devicons.railway.app/i/mysql.svg",
+      "name": "MySQL",
+      "build": {},
+      "deploy": {
+        "startCommand": "docker-entrypoint.sh mysqld --datadir=/var/lib/mysql/data --max_connections=1000 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password --skip-log-bin --performance-schema=OFF",
+        "healthcheckPath": null,
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      },
+      "source": {
+        "image": "mysql:8.0.40"
+      },
+      "networking": {
+        "serviceDomains": {}
+      },
+      "volumeMounts": {
+        "73343c72-8fa5-4172-a7f6-cc3553e64045": {
+          "mountPath": "/var/lib/mysql"
+        }
+      },
+      "variables": {
+        "MYSQL_ROOT_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Auto-generated MySQL root password",
+          "isOptional": false
+        },
+        "MYSQL_DATABASE": {
+          "defaultValue": "rag_flow",
+          "description": "Database created on first boot",
+          "isOptional": false
+        },
+        "RAILWAY_DEPLOYMENT_DRAINING_SECONDS": {
+          "defaultValue": "60",
+          "description": "Time for MySQL to shut down cleanly on redeploy",
+          "isOptional": false
+        }
+      }
+    },
+    "d1d528d5-0212-4753-93f1-6e8e64712b46": {
+      "icon": "https://devicons.railway.app/i/minio.svg",
+      "name": "MinIO",
+      "build": {},
+      "deploy": {
+        "startCommand": "/usr/bin/docker-entrypoint.sh server /data --address :9000 --console-address :9001",
+        "healthcheckPath": null,
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      },
+      "source": {
+        "image": "pgsty/silo:RELEASE.2026-08-06T00-00-00Z"
+      },
+      "networking": {
+        "serviceDomains": {}
+      },
+      "volumeMounts": {
+        "18f3b98a-4447-4363-a23f-5f3139a696af": {
+          "mountPath": "/data"
+        }
+      },
+      "variables": {
+        "MINIO_ROOT_USER": {
+          "defaultValue": "ragflow",
+          "description": "MinIO access key",
+          "isOptional": false
+        },
+        "MINIO_ROOT_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Auto-generated MinIO secret key",
+          "isOptional": false
+        }
+      }
+    },
+    "d11c0314-4741-4b3e-aadb-78678a9e0cb1": {
+      "icon": "https://devicons.railway.app/i/redis.svg",
+      "name": "Redis",
+      "build": {},
+      "deploy": {
+        "startCommand": "/bin/sh -c \"chown -R redis:redis /data && exec docker-entrypoint.sh redis-server --requirepass $REDIS_PASSWORD --appendonly yes --maxmemory 128mb --maxmemory-policy volatile-lru\"",
+        "healthcheckPath": null,
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      },
+      "source": {
+        "image": "redis:8.10.2-alpine"
+      },
+      "networking": {
+        "serviceDomains": {}
+      },
+      "volumeMounts": {
+        "680f85c8-1316-4886-ad20-9560fd1905e9": {
+          "mountPath": "/data"
+        }
+      },
+      "variables": {
+        "REDIS_PASSWORD": {
+          "defaultValue": "${{secret(32, \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\")}}",
+          "description": "Auto-generated Redis password",
+          "isOptional": false
+        }
+      }
+    }
+  }
+}
