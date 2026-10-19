@@ -35,7 +35,7 @@ Every password, plus RAGFlow's session signing key and the built-in superuser's 
 
 - [RAGFlow documentation](https://ragflow.io/docs/dev/)
 - [RAGFlow on GitHub](https://github.com/infiniflow/ragflow)
-- [Template source on GitHub](https://github.com/nomideusz/ragflow-railway)
+- [Template source on GitHub](https://github.com/two-workspaces/ragflow)
 
 ### Implementation Details
 

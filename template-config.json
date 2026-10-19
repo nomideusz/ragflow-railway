@@ -1,7 +1,7 @@
 {
   "services": {
     "7453e10c-ab22-4e25-b694-2e2b0411be6e": {
-      "icon": "https://raw.githubusercontent.com/nomideusz/ragflow-railway/main/icon.svg",
+      "icon": "https://raw.githubusercontent.com/two-workspaces/ragflow/main/icon.svg",
       "name": "RAGFlow",
       "build": {},
       "deploy": {

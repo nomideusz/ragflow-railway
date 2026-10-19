@@ -3,7 +3,7 @@
   "short_name": "RAGFlow Engine",
   "description": "Deep-document RAG engine: chat with PDFs, docs and sheets, with citations",
   "category": "AI/ML",
-  "image": "https://raw.githubusercontent.com/nomideusz/ragflow-railway/main/icon.svg",
+  "image": "https://raw.githubusercontent.com/two-workspaces/ragflow/main/icon.svg",
   "card_desc": "RAGFlow: the open-source RAG engine with deep document understanding. Parse PDFs, Word, slides and spreadsheets into knowledge bases, then chat with them with grounded citations, on Elasticsearch, MySQL, MinIO and Redis.",
   "deploy_marker": "infiniflow/ragflow:v0.27.2",
   "id": "61259ab1-f7e3-4a63-9837-271bd7d03660",
